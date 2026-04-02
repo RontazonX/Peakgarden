@@ -1,0 +1,5 @@
+{
+  "name": "Smart Garden Dashboard",
+  "description": "IoT Dashboard for Smart Garden using Supabase",
+  "requestFramePermissions": []
+}
