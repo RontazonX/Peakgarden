@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { Droplets, Thermometer, Power, Lock, KeyRound, Sprout, AlertTriangle, LogOut, Cpu } from 'lucide-react';
+import { Droplets, Thermometer, Power, Lock, KeyRound, Sprout, AlertTriangle, LogOut, Cpu, Activity, Settings2, Bell, BellOff, Save, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 
 // Types
 type AppState = 'CONNECT_DEVICE' | 'DASHBOARD';
@@ -13,6 +14,12 @@ interface SensorData {
   temp: number;
   moisture: number;
   pump: number;
+}
+
+interface DeviceSettings {
+  tempThreshold: number;
+  moistureThreshold: number;
+  notificationsEnabled: number;
 }
 
 export default function SmartGardenApp() {
@@ -26,8 +33,13 @@ export default function SmartGardenApp() {
   
   // Data State
   const [sensorData, setSensorData] = useState<SensorData>({ temp: 0, moisture: 0, pump: 0 });
+  const [deviceSettings, setDeviceSettings] = useState<DeviceSettings>({ tempThreshold: 33, moistureThreshold: 20, notificationsEnabled: 0 });
+  const [showSettings, setShowSettings] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [pumpHistory, setPumpHistory] = useState<{ time: string, status: number }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const lastNotifRef = useRef<number>(0);
 
   useEffect(() => {
     // Check Auth
@@ -125,10 +137,33 @@ export default function SmartGardenApp() {
           data.forEach((item: any) => {
             if (item.sensor_name === 'temp') newData.temp = item.value;
             if (item.sensor_name === 'moisture') newData.moisture = item.value;
-            if (item.sensor_name === 'pump') newData.pump = item.value;
+            if (item.sensor_name === 'pump') {
+              newData.pump = item.value;
+              // Initialize pump history with the current state if empty
+              setPumpHistory(ph => {
+                if (ph.length === 0) {
+                  return [{
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    status: item.value
+                  }];
+                }
+                return ph;
+              });
+            }
           });
           return newData;
         });
+        
+        setDeviceSettings(prev => {
+          const newSettings = { ...prev };
+          data.forEach((item: any) => {
+            if (item.sensor_name === 'temp_threshold') newSettings.tempThreshold = item.value;
+            if (item.sensor_name === 'moisture_threshold') newSettings.moistureThreshold = item.value;
+            if (item.sensor_name === 'notifications_enabled') newSettings.notificationsEnabled = item.value;
+          });
+          return newSettings;
+        });
+        
         setLastUpdated(new Date());
       }
     } catch (err: any) {
@@ -174,24 +209,126 @@ export default function SmartGardenApp() {
     }
   };
 
-  // Polling for updates
+  // Realtime updates
   useEffect(() => {
-    let interval: NodeJS.Timeout;
     if (appState === 'DASHBOARD' && deviceId) {
       fetchLatestData(); // Initial fetch
-      interval = setInterval(() => {
-        fetchLatestData();
-      }, 3000); // Poll every 3 seconds
+
+      // Subscribe to real-time changes from Supabase
+      const channel = supabase
+        .channel('garden_stats_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events
+            schema: 'public',
+            table: 'garden_stats',
+            filter: `device_id=eq.${deviceId}`
+          },
+          (payload) => {
+            const newData = (payload.new || payload.old) as any;
+            if (!newData) return;
+            const { sensor_name, value } = newData;
+            
+            if (['temp', 'moisture', 'pump'].includes(sensor_name)) {
+              setSensorData(prev => ({ ...prev, [sensor_name]: value }));
+              setLastUpdated(new Date());
+            } else if (['temp_threshold', 'moisture_threshold', 'notifications_enabled'].includes(sensor_name)) {
+              setDeviceSettings(prev => {
+                const updated = { ...prev };
+                if (sensor_name === 'temp_threshold') updated.tempThreshold = value;
+                if (sensor_name === 'moisture_threshold') updated.moistureThreshold = value;
+                if (sensor_name === 'notifications_enabled') updated.notificationsEnabled = value;
+                return updated;
+              });
+            }
+            
+            if (sensor_name === 'pump') {
+              setPumpHistory(prev => {
+                const newHistory = [...prev, {
+                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                  status: value
+                }];
+                return newHistory.slice(-20); // Keep last 20 points
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
-    return () => clearInterval(interval);
   }, [appState, deviceId, fetchLatestData]);
+
+  // Notification Logic
+  useEffect(() => {
+    if (appState === 'DASHBOARD' && deviceSettings.notificationsEnabled === 1) {
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'default') {
+          Notification.requestPermission();
+        } else if (Notification.permission === 'granted') {
+          const now = Date.now();
+          if (now - lastNotifRef.current > 60000) { // 1 minute cooldown
+            if (sensorData.temp >= deviceSettings.tempThreshold) {
+              new Notification('SmartGarden Alert', { 
+                body: `Temperature is too high: ${sensorData.temp}°C!`,
+              });
+              lastNotifRef.current = now;
+            } else if (sensorData.moisture <= deviceSettings.moistureThreshold) {
+              new Notification('SmartGarden Alert', { 
+                body: `Soil moisture is too low: ${sensorData.moisture}%!`,
+              });
+              lastNotifRef.current = now;
+            }
+          }
+        }
+      }
+    }
+  }, [sensorData.temp, sensorData.moisture, deviceSettings, appState]);
+
+  const saveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      const updates = [
+        { device_id: deviceId, sensor_name: 'temp_threshold', value: deviceSettings.tempThreshold },
+        { device_id: deviceId, sensor_name: 'moisture_threshold', value: deviceSettings.moistureThreshold },
+        { device_id: deviceId, sensor_name: 'notifications_enabled', value: deviceSettings.notificationsEnabled }
+      ];
+      
+      // Upsert each setting
+      for (const update of updates) {
+        const { data: existing } = await supabase
+          .from('garden_stats')
+          .select('id')
+          .eq('device_id', deviceId)
+          .eq('sensor_name', update.sensor_name)
+          .single();
+          
+        if (existing) {
+          await supabase.from('garden_stats').update({ value: update.value }).eq('id', existing.id);
+        } else {
+          await supabase.from('garden_stats').insert(update);
+        }
+      }
+      setShowSettings(false);
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      alert('Failed to save settings');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   const handleDisconnect = () => {
     setAppState('CONNECT_DEVICE');
     setDeviceId('');
   };
 
-  const isOverheating = sensorData.temp >= 33;
+  const isOverheating = sensorData.temp >= deviceSettings.tempThreshold;
+  const isLowMoisture = sensorData.moisture <= deviceSettings.moistureThreshold;
 
   if (isCheckingAuth) {
     return (
@@ -310,8 +447,15 @@ export default function SmartGardenApp() {
                     Live Sync
                   </div>
                   <button 
+                    onClick={() => setShowSettings(true)}
+                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                    title="Alert Settings"
+                  >
+                    <Settings2 className="w-5 h-5" />
+                  </button>
+                  <button 
                     onClick={handleDisconnect}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Disconnect"
                   >
                     <LogOut className="w-5 h-5" />
@@ -323,7 +467,7 @@ export default function SmartGardenApp() {
             {/* Main Content */}
             <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
               
-              {/* Overheating Alert */}
+              {/* Alerts */}
               <AnimatePresence>
                 {isOverheating && (
                   <motion.div 
@@ -338,7 +482,25 @@ export default function SmartGardenApp() {
                     <div>
                       <h3 className="font-semibold text-red-800">Overheating Alert!</h3>
                       <p className="text-red-600 text-sm mt-1">
-                        Temperature has reached {sensorData.temp}°C. The pump has been automatically activated by the device safety protocol.
+                        Temperature has reached {sensorData.temp}°C (Threshold: {deviceSettings.tempThreshold}°C). The pump has been automatically activated by the device safety protocol.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+                {isLowMoisture && !isOverheating && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-start gap-4 overflow-hidden"
+                  >
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
+                      <Droplets className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-orange-800">Low Moisture Alert!</h3>
+                      <p className="text-orange-600 text-sm mt-1">
+                        Soil moisture is at {sensorData.moisture}% (Threshold: {deviceSettings.moistureThreshold}%). Consider turning on the pump.
                       </p>
                     </div>
                   </motion.div>
@@ -443,6 +605,67 @@ export default function SmartGardenApp() {
 
               </div>
 
+              {/* Pump Status History Chart */}
+              <div className="mt-6 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <h2 className="font-semibold text-slate-700 text-lg">Pump Status History</h2>
+                </div>
+                
+                <div className="h-64 w-full">
+                  {pumpHistory.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={pumpHistory} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis 
+                          dataKey="time" 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#94a3b8', fontSize: 12 }}
+                          dy={10}
+                        />
+                        <YAxis 
+                          domain={[0, 1]} 
+                          ticks={[0, 1]} 
+                          tickFormatter={(val) => val === 1 ? 'ON' : 'OFF'}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#94a3b8', fontSize: 12 }}
+                          dx={-10}
+                        />
+                        <Tooltip 
+                          labelFormatter={(label) => `Time: ${label}`}
+                          formatter={(value: any) => [value === 1 ? 'ON' : 'OFF', 'Status']}
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Line 
+                          type="stepAfter" 
+                          dataKey="status" 
+                          stroke="#10b981" 
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
+                          activeDot={{ r: 6, fill: '#10b981', strokeWidth: 0 }}
+                          isAnimationActive={false}
+                        />
+                        <Brush 
+                          dataKey="time" 
+                          height={30} 
+                          stroke="#10b981" 
+                          fill="#f8fafc"
+                          tickFormatter={() => ''}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+                      Waiting for pump activity data...
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* System Status Footer */}
               <div className="flex items-center justify-between text-sm text-slate-500 pt-8">
                 <p>Device ID: <span className="font-mono bg-slate-100 px-2 py-1 rounded text-xs">{deviceId}</span></p>
@@ -451,6 +674,106 @@ export default function SmartGardenApp() {
 
             </main>
           </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettings && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Settings2 className="w-5 h-5 text-emerald-600" />
+                  Alert Settings
+                </h2>
+                <button 
+                  onClick={() => setShowSettings(false)}
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={saveSettings} className="p-6 space-y-6">
+                <div>
+                  <label className="flex items-center justify-between text-sm font-medium text-slate-700 mb-2">
+                    <span>Overheating Threshold (°C)</span>
+                    <span className="text-emerald-600 font-bold">{deviceSettings.tempThreshold}°C</span>
+                  </label>
+                  <input 
+                    type="range" 
+                    min="20" max="50" step="1"
+                    value={deviceSettings.tempThreshold}
+                    onChange={(e) => setDeviceSettings(prev => ({ ...prev, tempThreshold: parseInt(e.target.value) }))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  />
+                  <p className="text-xs text-slate-500 mt-2">Alert triggers when temperature exceeds this value.</p>
+                </div>
+
+                <div>
+                  <label className="flex items-center justify-between text-sm font-medium text-slate-700 mb-2">
+                    <span>Low Moisture Threshold (%)</span>
+                    <span className="text-blue-600 font-bold">{deviceSettings.moistureThreshold}%</span>
+                  </label>
+                  <input 
+                    type="range" 
+                    min="0" max="100" step="5"
+                    value={deviceSettings.moistureThreshold}
+                    onChange={(e) => setDeviceSettings(prev => ({ ...prev, moistureThreshold: parseInt(e.target.value) }))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <p className="text-xs text-slate-500 mt-2">Alert triggers when moisture falls below this value.</p>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${deviceSettings.notificationsEnabled === 1 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
+                      {deviceSettings.notificationsEnabled === 1 ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-700 text-sm">Browser Notifications</p>
+                      <p className="text-xs text-slate-500">Receive alerts when app is open</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newVal = deviceSettings.notificationsEnabled === 1 ? 0 : 1;
+                      setDeviceSettings(prev => ({ ...prev, notificationsEnabled: newVal }));
+                      if (newVal === 1 && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+                        Notification.requestPermission();
+                      }
+                    }}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${
+                      deviceSettings.notificationsEnabled === 1 ? 'bg-emerald-500' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span 
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                        deviceSettings.notificationsEnabled === 1 ? 'translate-x-6' : 'translate-x-1'
+                      }`} 
+                    />
+                  </button>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSavingSettings}
+                    className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-70 transition-all"
+                  >
+                    {isSavingSettings ? 'Saving...' : <><Save className="w-4 h-4" /> Save Settings</>}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -37,7 +37,10 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Beranda', path: '/' },
     { name: 'Tentang Kami', path: '/about' },
-    ...(session ? [{ name: 'Dashboard', path: '/dashboard' }] : []),
+    ...(session ? [
+      { name: 'Dashboard', path: '/dashboard' },
+      { name: 'Profil', path: '/profile' }
+    ] : []),
   ];
 
   return (
