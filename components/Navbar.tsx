@@ -1,19 +1,43 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
-import { Sprout, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Sprout, Menu, X, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
 
   const navLinks = [
     { name: 'Beranda', path: '/' },
     { name: 'Tentang Kami', path: '/about' },
-    { name: 'Dashboard', path: '/dashboard' },
+    ...(session ? [{ name: 'Dashboard', path: '/dashboard' }] : []),
   ];
 
   return (
@@ -46,18 +70,30 @@ export default function Navbar() {
               ))}
             </div>
             <div className="flex items-center gap-3">
-              <Link
-                href="/login"
-                className="text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors px-4 py-2"
-              >
-                Masuk
-              </Link>
-              <Link
-                href="/register"
-                className="text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors px-5 py-2.5 rounded-full shadow-sm shadow-emerald-600/20"
-              >
-                Daftar
-              </Link>
+              {session ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 transition-colors px-4 py-2 rounded-full"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Keluar
+                </button>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors px-4 py-2"
+                  >
+                    Masuk
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors px-5 py-2.5 rounded-full shadow-sm shadow-emerald-600/20"
+                  >
+                    Daftar
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -95,20 +131,35 @@ export default function Navbar() {
               </Link>
             ))}
             <hr className="border-slate-100" />
-            <Link
-              href="/login"
-              onClick={() => setIsOpen(false)}
-              className="text-base font-medium text-slate-600"
-            >
-              Masuk
-            </Link>
-            <Link
-              href="/register"
-              onClick={() => setIsOpen(false)}
-              className="text-base font-medium text-emerald-600"
-            >
-              Daftar Sekarang
-            </Link>
+            {session ? (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsOpen(false);
+                }}
+                className="text-base font-medium text-red-600 text-left flex items-center gap-2"
+              >
+                <LogOut className="w-5 h-5" />
+                Keluar
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="text-base font-medium text-slate-600"
+                >
+                  Masuk
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="text-base font-medium text-emerald-600"
+                >
+                  Daftar Sekarang
+                </Link>
+              </>
+            )}
           </div>
         </motion.div>
       )}

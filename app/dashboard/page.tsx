@@ -1,17 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { Droplets, Thermometer, Power, Lock, KeyRound, Sprout, AlertTriangle, LogOut, Cpu } from 'lucide-react';
-
-// Initialize Supabase Client globally
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vkcwjebggauutgoawlre.supabase.co';
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '';
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+import { supabase } from '@/lib/supabase';
 
 // Types
-type AppState = 'LOGIN' | 'CONNECT_DEVICE' | 'DASHBOARD';
+type AppState = 'CONNECT_DEVICE' | 'DASHBOARD';
 
 interface SensorData {
   temp: number;
@@ -20,15 +16,38 @@ interface SensorData {
 }
 
 export default function SmartGardenApp() {
+  const router = useRouter();
   const [appState, setAppState] = useState<AppState>('CONNECT_DEVICE');
   
   const [deviceId, setDeviceId] = useState('');
+  const [rememberDevice, setRememberDevice] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
   // Data State
   const [sensorData, setSensorData] = useState<SensorData>({ temp: 0, moisture: 0, pump: 0 });
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  useEffect(() => {
+    // Check Auth
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+      } else {
+        setIsCheckingAuth(false);
+      }
+    };
+    checkAuth();
+
+    // Check saved device
+    const savedDevice = localStorage.getItem('smartgarden_device_id');
+    if (savedDevice) {
+      setDeviceId(savedDevice);
+      setRememberDevice(true);
+    }
+  }, [router]);
 
   // Handle Device Connection
   const handleConnectDevice = async (e: React.FormEvent) => {
@@ -59,8 +78,13 @@ export default function SmartGardenApp() {
       if (error) throw error;
 
       if (data && data.length === 0) {
-        // Optional: You can warn the user if no data exists yet, but still let them in
         console.warn('No data found for this device yet. Waiting for device to sync...');
+      }
+
+      if (rememberDevice) {
+        localStorage.setItem('smartgarden_device_id', deviceId);
+      } else {
+        localStorage.removeItem('smartgarden_device_id');
       }
 
       setAppState('DASHBOARD');
@@ -162,12 +186,24 @@ export default function SmartGardenApp() {
     return () => clearInterval(interval);
   }, [appState, deviceId, fetchLatestData]);
 
-  const handleLogout = () => {
+  const handleDisconnect = () => {
     setAppState('CONNECT_DEVICE');
     setDeviceId('');
   };
 
   const isOverheating = sensorData.temp >= 33;
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <motion.div 
+          animate={{ rotate: 360 }} 
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-200 pt-20">
@@ -212,18 +248,25 @@ export default function SmartGardenApp() {
                     This is the unique identifier for your specific smart garden device.
                   </p>
                 </div>
+
+                <div className="flex items-center">
+                  <input
+                    id="remember-device"
+                    type="checkbox"
+                    checked={rememberDevice}
+                    onChange={(e) => setRememberDevice(e.target.checked)}
+                    className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded"
+                  />
+                  <label htmlFor="remember-device" className="ml-2 block text-sm text-slate-600">
+                    Ingat perangkat ini
+                  </label>
+                </div>
+
                 <div className="flex gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => setAppState('LOGIN')}
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-3 rounded-xl transition-colors"
-                  >
-                    Back
-                  </button>
                   <button 
                     type="submit"
                     disabled={isLoading}
-                    className="flex-[2] bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-medium py-3 rounded-xl transition-colors shadow-sm shadow-emerald-600/20 flex items-center justify-center gap-2"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-medium py-3 rounded-xl transition-colors shadow-sm shadow-emerald-600/20 flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
                       <motion.div 
@@ -267,7 +310,7 @@ export default function SmartGardenApp() {
                     Live Sync
                   </div>
                   <button 
-                    onClick={handleLogout}
+                    onClick={handleDisconnect}
                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                     title="Disconnect"
                   >
