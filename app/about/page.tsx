@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react';
 import Image from 'next/image';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Mail, MapPin, Phone } from 'lucide-react';
 
 export default function AboutPage() {
   const values = [
@@ -76,6 +76,105 @@ export default function AboutPage() {
               referrerPolicy="no-referrer"
             />
           </motion.div>
+        </div>
+      </div>
+
+      {/* Team Section */}
+      <div className="bg-white py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="text-emerald-600 font-semibold tracking-wider uppercase text-sm">Tim Kami</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4">Orang di Balik SmartGarden</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Kami adalah tim yang berdedikasi untuk menggabungkan teknologi dan alam.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { name: 'Ahmad Reza', role: 'Founder & CEO', img: 'https://i.pravatar.cc/300?u=reza' },
+              { name: 'Sarah Wijaya', role: 'Head of Engineering', img: 'https://i.pravatar.cc/300?u=sarah' },
+              { name: 'Bima Satria', role: 'IoT Specialist', img: 'https://i.pravatar.cc/300?u=bima' }
+            ].map((member, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="text-center"
+              >
+                <div className="relative w-48 h-48 mx-auto mb-6 rounded-full overflow-hidden shadow-lg border-4 border-white">
+                  <Image src={member.img} alt={member.name} fill className="object-cover" referrerPolicy="no-referrer" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">{member.name}</h3>
+                <p className="text-emerald-600 font-medium">{member.role}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Section */}
+      <div className="bg-slate-50 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-emerald-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row">
+            <div className="md:w-1/2 p-12 lg:p-16 text-white">
+              <h2 className="text-3xl font-bold mb-6">Hubungi Kami</h2>
+              <p className="text-emerald-100 mb-10 text-lg">
+                Punya pertanyaan tentang SmartGarden atau ingin berdiskusi tentang kebutuhan kebun Anda? Tim kami siap membantu.
+              </p>
+              
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-800 rounded-full flex items-center justify-center shrink-0">
+                    <Mail className="w-5 h-5 text-emerald-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-emerald-300">Email</p>
+                    <p className="font-medium text-lg">hello@smartgarden.id</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-800 rounded-full flex items-center justify-center shrink-0">
+                    <Phone className="w-5 h-5 text-emerald-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-emerald-300">Telepon</p>
+                    <p className="font-medium text-lg">+62 811 2345 6789</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-800 rounded-full flex items-center justify-center shrink-0">
+                    <MapPin className="w-5 h-5 text-emerald-300" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-emerald-300">Kantor Pusat</p>
+                    <p className="font-medium text-lg">Gedung Inovasi Lt. 4<br/>Jakarta Selatan, Indonesia</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="md:w-1/2 bg-white p-12 lg:p-16">
+              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Nama Lengkap</label>
+                  <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" placeholder="Masukkan nama Anda" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                  <input type="email" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" placeholder="email@contoh.com" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Pesan</label>
+                  <textarea rows={4} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none" placeholder="Bagaimana kami bisa membantu?"></textarea>
+                </div>
+                <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-emerald-600/30">
+                  Kirim Pesan
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>

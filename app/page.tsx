@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'motion/react';
-import { ArrowRight, Leaf, ShieldCheck, Smartphone, Zap } from 'lucide-react';
+import { ArrowRight, Leaf, ShieldCheck, Smartphone, Zap, CheckCircle2, Star, Quote, Activity } from 'lucide-react';
 
 export default function Home() {
   const features = [
@@ -76,7 +76,8 @@ export default function Home() {
       <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Fitur Unggulan Kami</h2>
+            <span className="text-emerald-600 font-semibold tracking-wider uppercase text-sm">Keunggulan</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4">Fitur Unggulan Kami</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
               SmartGarden dirancang untuk memberikan kemudahan maksimal dalam merawat tanaman Anda dengan berbagai fitur canggih.
             </p>
@@ -90,7 +91,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow"
+                className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6">
                   {feature.icon}
@@ -99,6 +100,169 @@ export default function Home() {
                 <p className="text-slate-600 leading-relaxed">
                   {feature.description}
                 </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="lg:w-1/2"
+            >
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+                <img src="https://picsum.photos/seed/smartfarm/800/600" alt="Smart Farming" className="w-full h-auto object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 right-6">
+                  <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl flex items-center gap-4">
+                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
+                      <Activity className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">Status Sensor</p>
+                      <p className="text-xs text-slate-500">Sinkronisasi Real-time Aktif</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="lg:w-1/2 space-y-8"
+            >
+              <div>
+                <span className="text-emerald-600 font-semibold tracking-wider uppercase text-sm">Cara Kerja</span>
+                <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4">Otomatisasi Cerdas untuk Hasil Maksimal</h2>
+                <p className="text-lg text-slate-600">
+                  Sistem kami menggunakan sensor IoT yang terhubung langsung ke cloud, memberikan Anda kendali penuh atas kebun Anda.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {[
+                  { title: 'Pasang Perangkat IoT', desc: 'Hubungkan sensor suhu dan kelembapan ke tanah dan mikrokontroler Anda.' },
+                  { title: 'Koneksikan ke WiFi', desc: 'Perangkat akan otomatis mengirimkan data secara real-time ke server Supabase kami.' },
+                  { title: 'Pantau & Kendalikan', desc: 'Buka dashboard dari perangkat apa saja untuk memantau status dan mengatur jadwal pompa.' }
+                ].map((step, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold shrink-0">
+                      {i + 1}
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-slate-900 mb-1">{step.title}</h4>
+                      <p className="text-slate-600">{step.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-24 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="text-emerald-600 font-semibold tracking-wider uppercase text-sm">Harga</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4">Pilih Paket Sesuai Kebutuhan</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Mulai dari kebun rumahan hingga perkebunan skala besar, kami memiliki solusi yang tepat.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {[
+              { name: 'Starter', price: 'Gratis', desc: 'Untuk kebun rumahan kecil', features: ['1 Perangkat IoT', 'Monitoring Real-time', 'Kontrol Pompa Manual', 'Riwayat Data 24 Jam'] },
+              { name: 'Pro', price: 'Rp 99.000', period: '/bulan', desc: 'Untuk petani modern', features: ['Hingga 5 Perangkat', 'Penjadwalan Otomatis', 'Notifikasi Email & Push', 'Riwayat Data 30 Hari', 'Prioritas Support'], popular: true },
+              { name: 'Enterprise', price: 'Custom', desc: 'Untuk perkebunan komersial', features: ['Perangkat Tak Terbatas', 'Analitik Lanjutan (AI)', 'Integrasi API Custom', 'Riwayat Data Tak Terbatas', 'Dedicated Account Manager'] }
+            ].map((plan, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className={`bg-white rounded-3xl p-8 border ${plan.popular ? 'border-emerald-500 shadow-xl shadow-emerald-100 relative' : 'border-slate-200 shadow-sm'}`}
+              >
+                {plan.popular && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+                    Paling Populer
+                  </div>
+                )}
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+                <p className="text-slate-500 mb-6">{plan.desc}</p>
+                <div className="mb-8">
+                  <span className="text-4xl font-extrabold text-slate-900">{plan.price}</span>
+                  {plan.period && <span className="text-slate-500">{plan.period}</span>}
+                </div>
+                <ul className="space-y-4 mb-8">
+                  {plan.features.map((feat, j) => (
+                    <li key={j} className="flex items-center gap-3 text-slate-600">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link 
+                  href="/register" 
+                  className={`block w-full text-center py-3 rounded-xl font-bold transition-colors ${plan.popular ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                >
+                  Pilih Paket
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="text-emerald-600 font-semibold tracking-wider uppercase text-sm">Testimoni</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4">Apa Kata Mereka?</h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { name: 'Budi Santoso', role: 'Petani Hidroponik', text: 'Sejak menggunakan SmartGarden, hasil panen selada saya meningkat 30%. Sistem otomatisnya sangat membantu saat saya sedang tidak di kebun.' },
+              { name: 'Siti Aminah', role: 'Penghobi Tanaman Hias', text: 'Sangat mudah digunakan! Saya bisa memantau kelembapan monstera saya dari kantor. Notifikasinya sangat responsif.' },
+              { name: 'AgroTech Farm', role: 'Perkebunan Komersial', text: 'Dashboard yang sangat informatif. Kami menggunakan paket Enterprise dan integrasi datanya sangat mulus dengan sistem internal kami.' }
+            ].map((testi, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-slate-50 p-8 rounded-3xl relative"
+              >
+                <Quote className="absolute top-6 right-6 w-10 h-10 text-emerald-200" />
+                <div className="flex gap-1 mb-4">
+                  {[...Array(5)].map((_, j) => <Star key={j} className="w-5 h-5 fill-amber-400 text-amber-400" />)}
+                </div>
+                <p className="text-slate-700 mb-6 italic">"{testi.text}"</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-slate-200 rounded-full overflow-hidden">
+                    <img src={`https://i.pravatar.cc/150?u=${i}`} alt={testi.name} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900">{testi.name}</h4>
+                    <p className="text-sm text-slate-500">{testi.role}</p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>

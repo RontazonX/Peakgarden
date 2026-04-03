@@ -172,7 +172,7 @@ export default function SmartGardenApp() {
     try {
       const { data, error } = await supabase
         .from('garden_stats')
-        .select('sensor_name, value')
+        .select('sensor_name, value, updated_at')
         .eq('device_id', deviceId);
         
       if (error) throw error;
@@ -213,7 +213,26 @@ export default function SmartGardenApp() {
           return newSettings;
         });
         
-        setLastUpdated(new Date());
+        // Find the most recent updated_at timestamp from the data
+        let latestUpdate = new Date(0);
+        let hasUpdatedAt = false;
+        
+        data.forEach((item: any) => {
+          if (item.updated_at && ['temp', 'moisture'].includes(item.sensor_name)) {
+            hasUpdatedAt = true;
+            const itemDate = new Date(item.updated_at);
+            if (itemDate > latestUpdate) {
+              latestUpdate = itemDate;
+            }
+          }
+        });
+        
+        if (hasUpdatedAt) {
+          setLastUpdated(latestUpdate);
+        } else {
+          // If no timestamp is available, we assume it's offline until we receive a real-time update
+          setLastUpdated(new Date(0));
+        }
       }
     } catch (err: any) {
       let errorMessage = 'Unknown database error';
@@ -281,7 +300,10 @@ export default function SmartGardenApp() {
             
             if (['temp', 'moisture', 'pump'].includes(sensor_name)) {
               setSensorData(prev => ({ ...prev, [sensor_name]: value }));
-              setLastUpdated(new Date());
+              // Only update lastUpdated for sensor readings, not pump toggles (which could be from the user)
+              if (['temp', 'moisture'].includes(sensor_name)) {
+                setLastUpdated(new Date());
+              }
             } else if (['temp_threshold', 'moisture_threshold', 'notifications_enabled', 'schedule_enabled', 'schedule_on_time', 'schedule_off_time'].includes(sensor_name)) {
               setDeviceSettings(prev => {
                 const updated = { ...prev };

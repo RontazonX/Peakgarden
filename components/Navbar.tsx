@@ -39,6 +39,7 @@ export default function Navbar() {
     { name: 'Tentang Kami', path: '/about' },
     ...(session ? [
       { name: 'Dashboard', path: '/dashboard' },
+      { name: 'Analitik', path: '/dashboard/analytics' },
       { name: 'Profil', path: '/profile' }
     ] : []),
   ];
