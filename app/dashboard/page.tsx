@@ -20,7 +20,23 @@ interface DeviceSettings {
   tempThreshold: number;
   moistureThreshold: number;
   notificationsEnabled: number;
+  scheduleEnabled: number;
+  scheduleOnTime: number; // minutes from midnight
+  scheduleOffTime: number; // minutes from midnight
 }
+
+// Helper functions for time conversion
+const minutesToTimeStr = (mins: number) => {
+  const h = Math.floor(mins / 60).toString().padStart(2, '0');
+  const m = (mins % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
+};
+
+const timeStrToMinutes = (timeStr: string) => {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+};
 
 export default function SmartGardenApp() {
   const router = useRouter();
@@ -33,13 +49,43 @@ export default function SmartGardenApp() {
   
   // Data State
   const [sensorData, setSensorData] = useState<SensorData>({ temp: 0, moisture: 0, pump: 0 });
-  const [deviceSettings, setDeviceSettings] = useState<DeviceSettings>({ tempThreshold: 33, moistureThreshold: 20, notificationsEnabled: 0 });
+  const [deviceSettings, setDeviceSettings] = useState<DeviceSettings>({ 
+    tempThreshold: 33, 
+    moistureThreshold: 20, 
+    notificationsEnabled: 0,
+    scheduleEnabled: 0,
+    scheduleOnTime: 480, // 08:00
+    scheduleOffTime: 540 // 09:00
+  });
   const [showSettings, setShowSettings] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [pumpHistory, setPumpHistory] = useState<{ time: string, status: number }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [deviceStatus, setDeviceStatus] = useState<'online' | 'offline' | 'connecting'>('connecting');
   const lastNotifRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!lastUpdated) {
+      setDeviceStatus('connecting');
+      return;
+    }
+    
+    const checkStatus = () => {
+      const now = new Date();
+      const diff = now.getTime() - lastUpdated.getTime();
+      // If last update was within 30 seconds, consider it online
+      if (diff < 30000) {
+        setDeviceStatus('online');
+      } else {
+        setDeviceStatus('offline');
+      }
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
+  }, [lastUpdated]);
 
   useEffect(() => {
     // Check Auth
@@ -160,6 +206,9 @@ export default function SmartGardenApp() {
             if (item.sensor_name === 'temp_threshold') newSettings.tempThreshold = item.value;
             if (item.sensor_name === 'moisture_threshold') newSettings.moistureThreshold = item.value;
             if (item.sensor_name === 'notifications_enabled') newSettings.notificationsEnabled = item.value;
+            if (item.sensor_name === 'schedule_enabled') newSettings.scheduleEnabled = item.value;
+            if (item.sensor_name === 'schedule_on_time') newSettings.scheduleOnTime = item.value;
+            if (item.sensor_name === 'schedule_off_time') newSettings.scheduleOffTime = item.value;
           });
           return newSettings;
         });
@@ -233,12 +282,15 @@ export default function SmartGardenApp() {
             if (['temp', 'moisture', 'pump'].includes(sensor_name)) {
               setSensorData(prev => ({ ...prev, [sensor_name]: value }));
               setLastUpdated(new Date());
-            } else if (['temp_threshold', 'moisture_threshold', 'notifications_enabled'].includes(sensor_name)) {
+            } else if (['temp_threshold', 'moisture_threshold', 'notifications_enabled', 'schedule_enabled', 'schedule_on_time', 'schedule_off_time'].includes(sensor_name)) {
               setDeviceSettings(prev => {
                 const updated = { ...prev };
                 if (sensor_name === 'temp_threshold') updated.tempThreshold = value;
                 if (sensor_name === 'moisture_threshold') updated.moistureThreshold = value;
                 if (sensor_name === 'notifications_enabled') updated.notificationsEnabled = value;
+                if (sensor_name === 'schedule_enabled') updated.scheduleEnabled = value;
+                if (sensor_name === 'schedule_on_time') updated.scheduleOnTime = value;
+                if (sensor_name === 'schedule_off_time') updated.scheduleOffTime = value;
                 return updated;
               });
             }
@@ -288,6 +340,30 @@ export default function SmartGardenApp() {
     }
   }, [sensorData.temp, sensorData.moisture, deviceSettings, appState]);
 
+  // Frontend Schedule Checker
+  useEffect(() => {
+    if (appState !== 'DASHBOARD' || deviceSettings.scheduleEnabled !== 1 || !deviceId) return;
+    
+    const checkSchedule = async () => {
+      const now = new Date();
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      
+      // If it's the exact minute to turn ON and pump is OFF
+      if (currentMins === deviceSettings.scheduleOnTime && sensorData.pump === 0) {
+        setSensorData(prev => ({ ...prev, pump: 1 }));
+        await supabase.from('garden_stats').update({ value: 1 }).eq('device_id', deviceId).eq('sensor_name', 'pump');
+      }
+      // If it's the exact minute to turn OFF and pump is ON
+      else if (currentMins === deviceSettings.scheduleOffTime && sensorData.pump === 1) {
+        setSensorData(prev => ({ ...prev, pump: 0 }));
+        await supabase.from('garden_stats').update({ value: 0 }).eq('device_id', deviceId).eq('sensor_name', 'pump');
+      }
+    };
+    
+    const interval = setInterval(checkSchedule, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, [appState, deviceSettings, sensorData.pump, deviceId]);
+
   const saveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSavingSettings(true);
@@ -295,7 +371,10 @@ export default function SmartGardenApp() {
       const updates = [
         { device_id: deviceId, sensor_name: 'temp_threshold', value: deviceSettings.tempThreshold },
         { device_id: deviceId, sensor_name: 'moisture_threshold', value: deviceSettings.moistureThreshold },
-        { device_id: deviceId, sensor_name: 'notifications_enabled', value: deviceSettings.notificationsEnabled }
+        { device_id: deviceId, sensor_name: 'notifications_enabled', value: deviceSettings.notificationsEnabled },
+        { device_id: deviceId, sensor_name: 'schedule_enabled', value: deviceSettings.scheduleEnabled },
+        { device_id: deviceId, sensor_name: 'schedule_on_time', value: deviceSettings.scheduleOnTime },
+        { device_id: deviceId, sensor_name: 'schedule_off_time', value: deviceSettings.scheduleOffTime }
       ];
       
       // Upsert each setting
@@ -435,15 +514,32 @@ export default function SmartGardenApp() {
                   </div>
                   <div>
                     <h1 className="font-bold text-slate-800 leading-tight">Smart Garden</h1>
-                    <p className="text-xs text-slate-500">Connected to Device</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-xs text-slate-500">{deviceId}</span>
+                      <span className="text-slate-300 text-xs">•</span>
+                      <div className="flex items-center gap-1">
+                        <span className="relative flex h-2 w-2">
+                          {deviceStatus === 'online' && (
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          )}
+                          <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                            deviceStatus === 'online' ? 'bg-emerald-500' : 
+                            deviceStatus === 'offline' ? 'bg-slate-400' : 'bg-amber-400'
+                          }`}></span>
+                        </span>
+                        <span className={`text-[10px] font-medium uppercase tracking-wider ${
+                          deviceStatus === 'online' ? 'text-emerald-600' : 
+                          deviceStatus === 'offline' ? 'text-slate-500' : 'text-amber-600'
+                        }`}>
+                          {deviceStatus}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="hidden sm:flex items-center gap-2 text-sm text-slate-500">
-                    <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </span>
+                    <Activity className="w-4 h-4 text-slate-400" />
                     Live Sync
                   </div>
                   <button 
@@ -590,8 +686,26 @@ export default function SmartGardenApp() {
                   </div>
                   
                   <div className="mt-auto">
-                    <div className="text-3xl font-bold tracking-tight mb-2">
-                      {sensorData.pump === 1 || isOverheating ? 'ACTIVE' : 'STANDBY'}
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="text-3xl font-bold tracking-tight">
+                        {sensorData.pump === 1 || isOverheating ? 'ACTIVE' : 'STANDBY'}
+                      </div>
+                      {(sensorData.pump === 1 || isOverheating) && (
+                        <motion.div
+                          animate={{ 
+                            y: [0, -5, 0],
+                            opacity: [0.5, 1, 0.5]
+                          }}
+                          transition={{ 
+                            repeat: Infinity, 
+                            duration: 1.5,
+                            ease: "easeInOut"
+                          }}
+                          className="flex items-center justify-center text-blue-200"
+                        >
+                          <Droplets className="w-6 h-6" />
+                        </motion.div>
+                      )}
                     </div>
                     <p className={`text-sm ${sensorData.pump === 1 || isOverheating ? 'text-emerald-100' : 'text-slate-500'}`}>
                       {isOverheating 
@@ -760,6 +874,61 @@ export default function SmartGardenApp() {
                       }`} 
                     />
                   </button>
+                </div>
+
+                {/* Pump Schedule Section */}
+                <div className="border-t border-slate-100 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-medium text-slate-800">Pump Schedule</h3>
+                      <p className="text-xs text-slate-500">Automatically turn pump on/off</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDeviceSettings(prev => ({ ...prev, scheduleEnabled: prev.scheduleEnabled === 1 ? 0 : 1 }))}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${
+                        deviceSettings.scheduleEnabled === 1 ? 'bg-emerald-500' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span 
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                          deviceSettings.scheduleEnabled === 1 ? 'translate-x-6' : 'translate-x-1'
+                        }`} 
+                      />
+                    </button>
+                  </div>
+
+                  <AnimatePresence>
+                    {deviceSettings.scheduleEnabled === 1 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-4 overflow-hidden"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1">
+                            <label className="block text-xs font-medium text-slate-500 mb-1">Turn ON Time</label>
+                            <input 
+                              type="time" 
+                              value={minutesToTimeStr(deviceSettings.scheduleOnTime)}
+                              onChange={(e) => setDeviceSettings(prev => ({ ...prev, scheduleOnTime: timeStrToMinutes(e.target.value) }))}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-xs font-medium text-slate-500 mb-1">Turn OFF Time</label>
+                            <input 
+                              type="time" 
+                              value={minutesToTimeStr(deviceSettings.scheduleOffTime)}
+                              onChange={(e) => setDeviceSettings(prev => ({ ...prev, scheduleOffTime: timeStrToMinutes(e.target.value) }))}
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="pt-2">
