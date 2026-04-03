@@ -32,6 +32,7 @@ export default function Home() {
     <div className="min-h-screen bg-slate-50 pt-20">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-white">
+<<<<<<< HEAD
         {/* Cinematic Video Background */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
           <iframe
@@ -42,6 +43,10 @@ export default function Home() {
           ></iframe>
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/70 to-white/90 z-0"></div>
+=======
+        <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/garden/1920/1080?blur=10')] bg-cover bg-center opacity-5"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/50 to-transparent"></div>
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
@@ -179,6 +184,7 @@ export default function Home() {
         </div>
       </section>
 
+<<<<<<< HEAD
       {/* Devices Section */}
       <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -187,28 +193,52 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4">Pilih Perangkat Sesuai Kebutuhan</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
               Dari tanaman hias di rumah hingga produksi masal di lahan pertanian, kami menyediakan perangkat keras yang tangguh dan mudah digunakan.
+=======
+      {/* Pricing Section */}
+      <section className="py-24 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="text-emerald-600 font-semibold tracking-wider uppercase text-sm">Harga</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4">Pilih Paket Sesuai Kebutuhan</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Mulai dari kebun rumahan hingga perkebunan skala besar, kami memiliki solusi yang tepat.
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
+<<<<<<< HEAD
               { name: 'SmartGarden Home', price: 'Rp 299.000', desc: 'Ideal untuk tanaman hias dan kebun mini di rumah.', features: ['1 Sensor Suhu & Kelembapan', '1 Modul Kontrol Pompa', 'Koneksi WiFi 2.4GHz', 'Akses Dashboard Gratis', 'Instalasi Mudah (Plug & Play)'] },
               { name: 'SmartGarden Pro', price: 'Rp 899.000', desc: 'Solusi lengkap untuk greenhouse dan urban farming.', features: ['3 Sensor Suhu & Kelembapan', 'Kontrol 2 Pompa Terpisah', 'Sensor Intensitas Cahaya', 'Baterai Cadangan', 'Notifikasi Telegram/Email'], popular: true },
               { name: 'SmartGarden Farm', price: 'Hubungi Kami', desc: 'Sistem terintegrasi untuk produksi masal dan lahan luas.', features: ['Sensor Jaringan Mesh (Unlimited)', 'Kontrol Irigasi Presisi', 'Integrasi Panel Surya', 'Analisis Data AI', 'Dukungan Teknisi On-site'] }
             ].map((device, i) => (
+=======
+              { name: 'Starter', price: 'Gratis', desc: 'Untuk kebun rumahan kecil', features: ['1 Perangkat IoT', 'Monitoring Real-time', 'Kontrol Pompa Manual', 'Riwayat Data 24 Jam'] },
+              { name: 'Pro', price: 'Rp 99.000', period: '/bulan', desc: 'Untuk petani modern', features: ['Hingga 5 Perangkat', 'Penjadwalan Otomatis', 'Notifikasi Email & Push', 'Riwayat Data 30 Hari', 'Prioritas Support'], popular: true },
+              { name: 'Enterprise', price: 'Custom', desc: 'Untuk perkebunan komersial', features: ['Perangkat Tak Terbatas', 'Analitik Lanjutan (AI)', 'Integrasi API Custom', 'Riwayat Data Tak Terbatas', 'Dedicated Account Manager'] }
+            ].map((plan, i) => (
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
               <motion.div 
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
+<<<<<<< HEAD
                 className={`bg-white rounded-3xl p-8 border ${device.popular ? 'border-emerald-500 shadow-xl shadow-emerald-100 relative' : 'border-slate-200 shadow-sm'}`}
               >
                 {device.popular && (
+=======
+                className={`bg-white rounded-3xl p-8 border ${plan.popular ? 'border-emerald-500 shadow-xl shadow-emerald-100 relative' : 'border-slate-200 shadow-sm'}`}
+              >
+                {plan.popular && (
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-sm font-bold">
                     Paling Populer
                   </div>
                 )}
+<<<<<<< HEAD
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">{device.name}</h3>
                 <p className="text-slate-500 mb-6">{device.desc}</p>
                 <div className="mb-8">
@@ -216,6 +246,16 @@ export default function Home() {
                 </div>
                 <ul className="space-y-4 mb-8">
                   {device.features.map((feat, j) => (
+=======
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+                <p className="text-slate-500 mb-6">{plan.desc}</p>
+                <div className="mb-8">
+                  <span className="text-4xl font-extrabold text-slate-900">{plan.price}</span>
+                  {plan.period && <span className="text-slate-500">{plan.period}</span>}
+                </div>
+                <ul className="space-y-4 mb-8">
+                  {plan.features.map((feat, j) => (
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
                     <li key={j} className="flex items-center gap-3 text-slate-600">
                       <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                       <span>{feat}</span>
@@ -223,10 +263,17 @@ export default function Home() {
                   ))}
                 </ul>
                 <Link 
+<<<<<<< HEAD
                   href="/about" 
                   className={`block w-full text-center py-3 rounded-xl font-bold transition-colors ${device.popular ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                 >
                   Pesan Sekarang
+=======
+                  href="/register" 
+                  className={`block w-full text-center py-3 rounded-xl font-bold transition-colors ${plan.popular ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                >
+                  Pilih Paket
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
                 </Link>
               </motion.div>
             ))}
@@ -234,6 +281,7 @@ export default function Home() {
         </div>
       </section>
 
+<<<<<<< HEAD
       {/* Founder / CEO Section */}
       <section className="py-24 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -288,6 +336,10 @@ export default function Home() {
 
       {/* Testimonials Section */}
       <section className="py-24 bg-slate-50">
+=======
+      {/* Testimonials Section */}
+      <section className="py-24 bg-white">
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <span className="text-emerald-600 font-semibold tracking-wider uppercase text-sm">Testimoni</span>
@@ -312,7 +364,11 @@ export default function Home() {
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, j) => <Star key={j} className="w-5 h-5 fill-amber-400 text-amber-400" />)}
                 </div>
+<<<<<<< HEAD
                 <p className="text-slate-700 mb-6 italic">&quot;{testi.text}&quot;</p>
+=======
+                <p className="text-slate-700 mb-6 italic">"{testi.text}"</p>
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-slate-200 rounded-full overflow-hidden">
                     <img src={`https://i.pravatar.cc/150?u=${i}`} alt={testi.name} />

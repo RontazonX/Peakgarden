@@ -1,6 +1,10 @@
 'use client';
 
+<<<<<<< HEAD
 import { useState, useEffect, useCallback } from 'react';
+=======
+import { useState, useEffect } from 'react';
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { supabase } from '@/lib/supabase';
@@ -13,10 +17,38 @@ export default function AnalyticsPage() {
   const [deviceId, setDeviceId] = useState('');
   const [historyData, setHistoryData] = useState<any[]>([]);
 
+<<<<<<< HEAD
   // Since we only have 'garden_stats' which stores current state, 
   // we will generate some realistic mock historical data for demonstration.
   // In a production app, you would fetch this from a 'garden_history' table.
   const generateMockHistoryData = useCallback(() => {
+=======
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
+      }
+      
+      const savedDevice = localStorage.getItem('smartgarden_device_id');
+      if (savedDevice) {
+        setDeviceId(savedDevice);
+        generateMockHistoryData(); // In a real app, fetch from a history table
+      } else {
+        router.push('/dashboard');
+      }
+      setIsLoading(false);
+    };
+    
+    checkAuth();
+  }, [router]);
+
+  // Since we only have 'garden_stats' which stores current state, 
+  // we will generate some realistic mock historical data for demonstration.
+  // In a production app, you would fetch this from a 'garden_history' table.
+  const generateMockHistoryData = () => {
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
     const data = [];
     const now = new Date();
     let temp = 28;
@@ -46,6 +78,7 @@ export default function AnalyticsPage() {
       });
     }
     setHistoryData(data);
+<<<<<<< HEAD
   }, []);
 
   useEffect(() => {
@@ -68,6 +101,9 @@ export default function AnalyticsPage() {
     
     checkAuth();
   }, [router, generateMockHistoryData]);
+=======
+  };
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
 
   if (isLoading) {
     return (

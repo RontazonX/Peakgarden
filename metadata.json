@@ -1,5 +1,12 @@
 {
+<<<<<<< HEAD
   "name": "Remix: Smart Garden Dashboard",
   "description": "IoT Dashboard for Smart Garden using Supabase",
   "requestFramePermissions": []
 }
+=======
+  "name": "Smart Garden Dashboard",
+  "description": "IoT Dashboard for Smart Garden using Supabase",
+  "requestFramePermissions": []
+}
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107

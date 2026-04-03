@@ -34,10 +34,13 @@ export default function Navbar() {
     router.push('/login');
   };
 
+<<<<<<< HEAD
   if (pathname.startsWith('/dashboard')) {
     return null;
   }
 
+=======
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
   const navLinks = [
     { name: 'Beranda', path: '/' },
     { name: 'Tentang Kami', path: '/about' },

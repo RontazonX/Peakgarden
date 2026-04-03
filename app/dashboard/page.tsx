@@ -3,10 +3,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+<<<<<<< HEAD
 import { Droplets, Thermometer, Power, Lock, KeyRound, Sprout, AlertTriangle, LogOut, Cpu, Activity, Settings2, Bell, BellOff, Save, X, CheckCircle2, LayoutGrid, MessageSquare, Leaf, LineChart as LineChartIcon, CloudSun, Users, CreditCard, Settings, ChevronDown, Wind, FlaskConical, Layers, Search, Plus, Minus, ChevronUp, MoreHorizontal, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 import Markdown from 'react-markdown';
+=======
+import { Droplets, Thermometer, Power, Lock, KeyRound, Sprout, AlertTriangle, LogOut, Cpu, Activity, Settings2, Bell, BellOff, Save, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
 
 // Types
 type AppState = 'CONNECT_DEVICE' | 'DASHBOARD';
@@ -44,6 +50,7 @@ export default function SmartGardenApp() {
   const [appState, setAppState] = useState<AppState>('CONNECT_DEVICE');
   
   const [deviceId, setDeviceId] = useState('');
+<<<<<<< HEAD
   const [deviceIdError, setDeviceIdError] = useState('');
   const [rememberDevice, setRememberDevice] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -67,6 +74,14 @@ export default function SmartGardenApp() {
       setWeatherData(mockWeather[selectedRegion]);
     }
   }, [selectedRegion]);
+=======
+  const [rememberDevice, setRememberDevice] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
+  // Data State
+  const [sensorData, setSensorData] = useState<SensorData>({ temp: 0, moisture: 0, pump: 0 });
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
   const [deviceSettings, setDeviceSettings] = useState<DeviceSettings>({ 
     tempThreshold: 33, 
     moistureThreshold: 20, 
@@ -77,13 +92,17 @@ export default function SmartGardenApp() {
   });
   const [showSettings, setShowSettings] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+<<<<<<< HEAD
   const [saveSuccessMessage, setSaveSuccessMessage] = useState('');
+=======
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
   const [pumpHistory, setPumpHistory] = useState<{ time: string, status: number }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [deviceStatus, setDeviceStatus] = useState<'online' | 'offline' | 'connecting'>('connecting');
   const lastNotifRef = useRef<number>(0);
 
+<<<<<<< HEAD
   // Chat State
   const [chatMessages, setChatMessages] = useState<{role: 'user' | 'assistant', content: string}[]>([
     {
@@ -139,6 +158,8 @@ Provide a helpful, concise response in markdown format.`;
     }
   };
 
+=======
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
   useEffect(() => {
     if (!lastUpdated) {
       setDeviceStatus('connecting');
@@ -168,12 +189,15 @@ Provide a helpful, concise response in markdown format.`;
       if (!session) {
         router.push('/login');
       } else {
+<<<<<<< HEAD
         const user = session.user;
         setUserProfile({
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
           email: user.email || '',
           avatarUrl: user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata?.full_name || user.email || 'User')}&background=10b981&color=fff`
         });
+=======
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
         setIsCheckingAuth(false);
       }
     };
@@ -190,8 +214,13 @@ Provide a helpful, concise response in markdown format.`;
   // Handle Device Connection
   const handleConnectDevice = async (e: React.FormEvent) => {
     e.preventDefault();
+<<<<<<< HEAD
     if (deviceIdError || !deviceId.trim()) {
       setLoginError('Please provide a valid Device ID.');
+=======
+    if (!deviceId.trim()) {
+      setLoginError('Device ID cannot be empty.');
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
       return;
     }
 
@@ -494,12 +523,16 @@ Provide a helpful, concise response in markdown format.`;
           await supabase.from('garden_stats').insert(update);
         }
       }
+<<<<<<< HEAD
       
       setSaveSuccessMessage('Settings saved successfully!');
       setTimeout(() => {
         setSaveSuccessMessage('');
         setShowSettings(false);
       }, 2000);
+=======
+      setShowSettings(false);
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
     } catch (err) {
       console.error('Error saving settings:', err);
       alert('Failed to save settings');
@@ -529,7 +562,11 @@ Provide a helpful, concise response in markdown format.`;
   }
 
   return (
+<<<<<<< HEAD
     <div className={`min-h-screen bg-[#F3F4F6] text-slate-900 font-sans selection:bg-emerald-200 ${appState === 'CONNECT_DEVICE' ? 'pt-20' : ''}`}>
+=======
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-200 pt-20">
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
       <AnimatePresence mode="wait">
         {appState === 'CONNECT_DEVICE' && (
           <motion.div 
@@ -561,6 +598,7 @@ Provide a helpful, concise response in markdown format.`;
                     <input 
                       type="text" 
                       value={deviceId}
+<<<<<<< HEAD
                       onChange={(e) => {
                         const val = e.target.value.toUpperCase();
                         setDeviceId(val);
@@ -573,10 +611,15 @@ Provide a helpful, concise response in markdown format.`;
                         }
                       }}
                       className={`w-full pl-12 pr-4 py-3 rounded-xl border ${deviceIdError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-emerald-500 focus:border-emerald-500'} outline-none transition-all font-mono text-sm`}
+=======
+                      onChange={(e) => setDeviceId(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-mono text-sm"
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
                       placeholder="e.g., GARDEN-001"
                       required
                     />
                   </div>
+<<<<<<< HEAD
                   {deviceIdError ? (
                     <p className="text-xs text-red-500 mt-2">{deviceIdError}</p>
                   ) : (
@@ -584,6 +627,11 @@ Provide a helpful, concise response in markdown format.`;
                       This is the unique identifier for your specific smart garden device.
                     </p>
                   )}
+=======
+                  <p className="text-xs text-slate-400 mt-2">
+                    This is the unique identifier for your specific smart garden device.
+                  </p>
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
                 </div>
 
                 <div className="flex items-center">
@@ -602,8 +650,13 @@ Provide a helpful, concise response in markdown format.`;
                 <div className="flex gap-3">
                   <button 
                     type="submit"
+<<<<<<< HEAD
                     disabled={isLoading || !!deviceIdError || !deviceId}
                     className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-colors shadow-sm shadow-emerald-600/20 flex items-center justify-center gap-2"
+=======
+                    disabled={isLoading}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-medium py-3 rounded-xl transition-colors shadow-sm shadow-emerald-600/20 flex items-center justify-center gap-2"
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
                   >
                     {isLoading ? (
                       <motion.div 
@@ -624,6 +677,7 @@ Provide a helpful, concise response in markdown format.`;
             key="dashboard"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
+<<<<<<< HEAD
             className="min-h-screen flex flex-row"
           >
             {/* Sidebar */}
@@ -1026,6 +1080,289 @@ Provide a helpful, concise response in markdown format.`;
                   </div>
 
                 </div>
+=======
+            className="min-h-screen flex flex-col"
+          >
+            {/* Header */}
+            <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+              <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                    <Sprout className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h1 className="font-bold text-slate-800 leading-tight">Smart Garden</h1>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-xs text-slate-500">{deviceId}</span>
+                      <span className="text-slate-300 text-xs">•</span>
+                      <div className="flex items-center gap-1">
+                        <span className="relative flex h-2 w-2">
+                          {deviceStatus === 'online' && (
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          )}
+                          <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                            deviceStatus === 'online' ? 'bg-emerald-500' : 
+                            deviceStatus === 'offline' ? 'bg-slate-400' : 'bg-amber-400'
+                          }`}></span>
+                        </span>
+                        <span className={`text-[10px] font-medium uppercase tracking-wider ${
+                          deviceStatus === 'online' ? 'text-emerald-600' : 
+                          deviceStatus === 'offline' ? 'text-slate-500' : 'text-amber-600'
+                        }`}>
+                          {deviceStatus}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+                    <Activity className="w-4 h-4 text-slate-400" />
+                    Live Sync
+                  </div>
+                  <button 
+                    onClick={() => setShowSettings(true)}
+                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                    title="Alert Settings"
+                  >
+                    <Settings2 className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={handleDisconnect}
+                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Disconnect"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
+              
+              {/* Alerts */}
+              <AnimatePresence>
+                {isOverheating && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-4 overflow-hidden"
+                  >
+                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-red-800">Overheating Alert!</h3>
+                      <p className="text-red-600 text-sm mt-1">
+                        Temperature has reached {sensorData.temp}°C (Threshold: {deviceSettings.tempThreshold}°C). The pump has been automatically activated by the device safety protocol.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+                {isLowMoisture && !isOverheating && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-start gap-4 overflow-hidden"
+                  >
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
+                      <Droplets className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-orange-800">Low Moisture Alert!</h3>
+                      <p className="text-orange-600 text-sm mt-1">
+                        Soil moisture is at {sensorData.moisture}% (Threshold: {deviceSettings.moistureThreshold}%). Consider turning on the pump.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* Temperature Card */}
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-6 opacity-5">
+                    <Thermometer className="w-32 h-32" />
+                  </div>
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isOverheating ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'}`}>
+                      <Thermometer className="w-6 h-6" />
+                    </div>
+                    <h2 className="font-semibold text-slate-700 text-lg">Temperature</h2>
+                  </div>
+                  <div className="mt-auto">
+                    <div className="flex items-baseline gap-2">
+                      <span className={`text-5xl font-bold tracking-tight ${isOverheating ? 'text-red-600' : 'text-slate-800'}`}>
+                        {sensorData.temp.toFixed(1)}
+                      </span>
+                      <span className="text-2xl font-medium text-slate-400">°C</span>
+                    </div>
+                    <p className="text-sm text-slate-500 mt-2">
+                      {isOverheating ? 'Critical high temperature' : 'Optimal growing temperature'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Moisture Card */}
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-6 opacity-5">
+                    <Droplets className="w-32 h-32" />
+                  </div>
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
+                      <Droplets className="w-6 h-6" />
+                    </div>
+                    <h2 className="font-semibold text-slate-700 text-lg">Soil Moisture</h2>
+                  </div>
+                  <div className="mt-auto">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-bold tracking-tight text-slate-800">
+                        {sensorData.moisture}
+                      </span>
+                      <span className="text-2xl font-medium text-slate-400">%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
+                      <motion.div 
+                        className="bg-blue-500 h-full rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${sensorData.moisture}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pump Control Card */}
+                <div className={`rounded-3xl p-6 shadow-sm border transition-colors duration-300 flex flex-col ${sensorData.pump === 1 || isOverheating ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-white border-slate-100 text-slate-800'}`}>
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${sensorData.pump === 1 || isOverheating ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        <Power className="w-6 h-6" />
+                      </div>
+                      <h2 className={`font-semibold text-lg ${sensorData.pump === 1 || isOverheating ? 'text-white' : 'text-slate-700'}`}>Water Pump</h2>
+                    </div>
+                    
+                    {/* Toggle Switch */}
+                    <button 
+                      onClick={togglePump}
+                      disabled={isOverheating}
+                      className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none ${
+                        isOverheating ? 'bg-emerald-400 cursor-not-allowed' :
+                        sensorData.pump === 1 ? 'bg-emerald-400' : 'bg-slate-200'
+                      }`}
+                    >
+                      <span 
+                        className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                          sensorData.pump === 1 || isOverheating ? 'translate-x-7' : 'translate-x-1'
+                        }`} 
+                      />
+                    </button>
+                  </div>
+                  
+                  <div className="mt-auto">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="text-3xl font-bold tracking-tight">
+                        {sensorData.pump === 1 || isOverheating ? 'ACTIVE' : 'STANDBY'}
+                      </div>
+                      {(sensorData.pump === 1 || isOverheating) && (
+                        <motion.div
+                          animate={{ 
+                            y: [0, -5, 0],
+                            opacity: [0.5, 1, 0.5]
+                          }}
+                          transition={{ 
+                            repeat: Infinity, 
+                            duration: 1.5,
+                            ease: "easeInOut"
+                          }}
+                          className="flex items-center justify-center text-blue-200"
+                        >
+                          <Droplets className="w-6 h-6" />
+                        </motion.div>
+                      )}
+                    </div>
+                    <p className={`text-sm ${sensorData.pump === 1 || isOverheating ? 'text-emerald-100' : 'text-slate-500'}`}>
+                      {isOverheating 
+                        ? 'Forced ON due to overheating' 
+                        : sensorData.pump === 1 
+                          ? 'Manual watering in progress' 
+                          : 'Pump is currently off'}
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Pump Status History Chart */}
+              <div className="mt-6 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <h2 className="font-semibold text-slate-700 text-lg">Pump Status History</h2>
+                </div>
+                
+                <div className="h-64 w-full">
+                  {pumpHistory.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={pumpHistory} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis 
+                          dataKey="time" 
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#94a3b8', fontSize: 12 }}
+                          dy={10}
+                        />
+                        <YAxis 
+                          domain={[0, 1]} 
+                          ticks={[0, 1]} 
+                          tickFormatter={(val) => val === 1 ? 'ON' : 'OFF'}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#94a3b8', fontSize: 12 }}
+                          dx={-10}
+                        />
+                        <Tooltip 
+                          labelFormatter={(label) => `Time: ${label}`}
+                          formatter={(value: any) => [value === 1 ? 'ON' : 'OFF', 'Status']}
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Line 
+                          type="stepAfter" 
+                          dataKey="status" 
+                          stroke="#10b981" 
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
+                          activeDot={{ r: 6, fill: '#10b981', strokeWidth: 0 }}
+                          isAnimationActive={false}
+                        />
+                        <Brush 
+                          dataKey="time" 
+                          height={30} 
+                          stroke="#10b981" 
+                          fill="#f8fafc"
+                          tickFormatter={() => ''}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+                      Waiting for pump activity data...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* System Status Footer */}
+              <div className="flex items-center justify-between text-sm text-slate-500 pt-8">
+                <p>Device ID: <span className="font-mono bg-slate-100 px-2 py-1 rounded text-xs">{deviceId}</span></p>
+                <p>Last synced: {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Never'}</p>
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
               </div>
 
             </main>
@@ -1174,6 +1511,7 @@ Provide a helpful, concise response in markdown format.`;
                 </div>
 
                 <div className="pt-2">
+<<<<<<< HEAD
                   <AnimatePresence>
                     {saveSuccessMessage && (
                       <motion.div
@@ -1190,6 +1528,11 @@ Provide a helpful, concise response in markdown format.`;
                   <button
                     type="submit"
                     disabled={isSavingSettings || !!saveSuccessMessage}
+=======
+                  <button
+                    type="submit"
+                    disabled={isSavingSettings}
+>>>>>>> 9e82f86d14baeac1da960feb4b82a995de088107
                     className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-70 transition-all"
                   >
                     {isSavingSettings ? 'Saving...' : <><Save className="w-4 h-4" /> Save Settings</>}
